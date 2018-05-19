@@ -1,0 +1,60 @@
+<script>
+import wepy from 'wepy'
+import 'wepy-async-function'
+
+export default class extends wepy.app {
+  config = {
+    pages: [
+      'pages/home/lithops', // 生石花图鉴
+    ],
+    // 分包加载，https://developers.weixin.qq.com/miniprogram/dev/framework/subpackages.html
+    'subPackages': [{
+      'root': 'sellerPack',
+      'pages': [
+        'seller/index' // 商家首页
+      ]
+    }],
+    window: {
+      backgroundTextStyle: 'dark',
+      backgroundColor: '#F9F9F9',
+      navigationBarBackgroundColor: '#ffffff',
+      // navigationBarBackgroundColor: '#37363b',
+      navigationBarTitleText: '生石花图鉴',
+      navigationBarTextStyle: 'black'
+      // enablePullDownRefresh: true
+    },
+    // tabBar: {
+    //   'color': '#7A7E83',
+    //   'selectedColor': '#3cc51f',
+    //   'borderStyle': 'black',
+    //   'backgroundColor': '#ffffff',
+    //   'position': 'bottom',
+    //   'list': [{
+    //     'pagePath': 'pages/shop/index',
+    //     'iconPath': 'images/succulent_off.png',
+    //     'selectedIconPath': 'images/succulent.png',
+    //     'text': '自定义tabbar'
+    //   }]
+    // },
+    // networkTimeout: {
+      // 超时时间，单位毫秒，默认都是60秒
+      // 'request': 60000,
+      // 'connectSocket': 60000,
+      // 'uploadFile': 60000,
+      // 'downloadFile': 60000
+    // },
+    debug: true
+  }
+
+  constructor () {
+    super()
+    this.use('requestfix')
+    this.use('promisify')
+  }
+}
+</script>
+
+<style lang="less">
+@import './styles/zan.wxss';
+@import './styles/style.wxss';
+</style>

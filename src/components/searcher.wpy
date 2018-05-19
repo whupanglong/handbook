@@ -1,0 +1,146 @@
+<template>
+  <!-- <view wx:if="{{!activeSearch}}" class="searcher">
+    <view class="oper-icon-ctn share2fri">
+      <view class="op-desc">转发好友</view>
+      <button open-type="share" @tap="popup" id="shareFromSearcher" class="middle-text-o" style="padding:unset;">
+        <image class="middle-text-i op-icon" src="../images/fenxiang.png"/>
+      </button>
+    </view>
+    <view class="oper-icon-ctn search-entr">
+      <view class="op-desc">搜索</view>
+      <button @tap="showSearch" class="middle-text-o" style="padding:unset;">
+        <image class="middle-text-i op-icon" src="../images/search.png"/>
+      </button>
+    </view>
+  </view> -->
+  <view wx:if="{{activeSearch}}" class="zan-panel mgt_0 search-result zan-panel--without-border">
+    <view class="zan-cell zan-field" style="background-color:{{bgColor ? bgColor : ''}}">
+      <input class="zan-field__input zan-cell__bd search-input" placeholder="" focus="{{focus}}" @input="codeChange" value="{{codeKey}}"/>
+      <button class="zan-cell__ft cc-btn zan-btn zan-btn--mini zan-btn--plain" @tap="toggleSearch">取消</button>
+    </view>
+    <scroll-view scroll-y style="height:{{scrollHeight}}px;" scroll-top="0" scroll-left="0">
+      <repeat for="{{results}}" item="rItem">
+        <navigator url="./lithops?hashid={{rItem.hashid}}" class="zan-cell" data-index="{{index}}">
+          <view class="zan-cell__bd">{{rItem.title}}</view>
+          <view class="zan-cell__ft zan-ellipsis">{{rItem.desc}}{{rItem.loc}}</view>
+        </navigator>
+      </repeat>
+      <view wx:if="{{!results.length && key}}" style="padding-top:20px;">
+        <view class="zan-loadmore zan-loadmore--nodata" style="margin-top:unset;">
+          <view class="zan-loadmore__tips" style="background-color:#fff;">没有搜索到</view>
+        </view>
+      </view>
+
+    </scroll-view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  import mixin from '../mixins/mixin'
+  import API from '../apis/api'
+
+  export default class Searcher extends wepy.component {
+    mixins = [mixin]
+    props = {
+      bgColor: String, // 搜索栏的底色
+    }
+    data = {
+      codeKey: '', // 这个是用来页面展示的，防抖动
+      key: '', // 这个是和codekey同步的用来搜索的字段
+      sess: '',
+      sysInfo: {},
+      activeSearch: false,
+      focus: false,
+      results: [],
+      scrollHeight: 300
+    }
+    computed = {
+      scrollHeight () {
+        return this.sysInfo.windowHeight - 45
+      }
+    }
+    watch = {
+      async key (newValue) {
+        if (newValue) { // 搜索的直接同步
+          let searchRet = await API.hbSearch({'query': {'key': newValue}})
+          console.log(searchRet)
+          this.results = searchRet['data']
+        } else { // 清空搜索
+          this.results = []
+        }
+        this.$apply()
+
+      }
+    }
+    methods = {
+      showSearch () {
+        this.activeSearch = true
+        this.focus = true
+        this.$apply()
+      },
+      toggleSearch () {
+        this.activeSearch = !this.activeSearch
+        this.$apply()
+      },
+      codeChange (e) {
+        this.key = e.detail.value
+        console.log(this.key);
+        this.$apply()
+      },
+      emitRes (e) {
+        let ret = this.results[e.currentTarget.dataset.index]
+        if (ret.hashid) {
+          this.$emit('reptileRet', ret)
+          this.focus = false
+          this.activeSearch = false
+          this.codeKey = ''
+          this.key = ''
+          this.results = []
+          this.$apply()
+        }
+
+      }
+    }
+
+    onLoad () {
+      this.sysInfo = wepy.getSystemInfoSync()
+    }
+  }
+</script>
+<style lang="less">
+
+.search-result{
+  position: fixed;
+  z-index: 6;
+  top: 0;
+  width: 100%;
+}
+.search-input{
+  padding:3px 10px;
+  background-color:#f9f9f9;
+  /* margin-left: 30px; */
+  margin-right: 10px;
+  border-radius:4px;
+  /* text-align:center; */
+}
+.cc-btn{
+  background-color:#f9f9f9 !important;
+}
+
+.scan{
+  width: 30px;
+  height: 30px;
+  position:absolute;
+  top:50%;
+  margin-top:-15px;
+  margin-left:-4px;
+}
+.search-view{
+  background-color:#f9f9f9;
+  border-radius:5px;
+  margin-left:30px;
+}
+
+
+
+</style>

@@ -1,0 +1,201 @@
+.container {
+  background: #F9F9F9;
+  overflow: hidden;
+  min-height: 100vh;
+  box-sizing: border-box;
+  /* padding: 15px 0; */
+}
+.container::before {
+  position: fixed;
+  top: 0;
+  left: 0;
+  content: ' ';
+  width: 100%;
+  height: 1rpx;
+  background-color: #e2e2e2;
+  z-index: 5;
+}
+.fixed-top {
+  position:absolute;
+  top:0;
+  display:block;
+  width:100%;
+  max-height: 125rpx;
+}
+.fixed-middle{
+  overflow: auto;
+  position:absolute;
+  width: 100%;
+  top: 130rpx;
+  bottom: 100rpx;
+}
+.fixed-bottom{
+  position:fixed;
+  bottom:0;
+  display:block;
+  width:100%;
+  max-height: 100rpx;
+}
+.fixed{
+  position: fixed;
+  table-layout: fixed;
+}
+.pyq-scroll{
+  /* display:block; */
+  white-space:nowrap;
+  height: 45px;
+  flex-direction:row;
+  border-bottom:1rpx solid #e5e5e5;
+  background:#fff;
+
+}
+.pyq-scroll__item{
+  /* 我擦..这里用px会导致下滑覆盖scroll */
+  min-width:140rpx;
+}
+/* 长的跟普通view一样的button*/
+.mystery-btn{
+  padding:unset;
+  font-size:unset;
+  line-height:unset;
+  background-color:unset;
+}
+.mystery-btn::after{
+  content:none;
+}
+/*一行两列版式*/
+.zan-row .odd{
+  padding: 0 1% 0 2%;
+}
+.zan-row .even{
+  padding: 0 2% 0 1%;
+}
+/*一行3列*/
+.zan-row .col0{
+  padding: 0 0.5% 0 1%;
+}
+.zan-row .col1{
+  padding: 0 0.5% 0 0.5%;
+}
+.zan-row .col2{
+  padding: 0 1% 0 0.5%;
+}
+.pyq-flex{
+  display: flex;
+}
+.pyq-btm{
+  position:absolute;
+  bottom:0;
+  width:100%;
+}
+.right {
+  position:absolute;
+  right:10px;
+}
+.tab--selected .zan-tab__title {
+  color:#333 !important;
+  border-bottom:3px solid #fb8b24;
+  font-weight:800;
+}
+.pyq-block-title{
+  position:relative;
+  padding:12px 15px;
+  display:flex;
+  align-items:center;
+  line-height:1.4;
+  font-size:14px;
+  font-weight:500;
+}
+.pyq-block-title .title{
+  border-left:4px solid #fb8b24;
+  padding-left:8px;
+}
+.mgt_0{
+  margin-top: 0;
+}
+.mgb_0{
+  margin-bottom: 0 !important;
+}
+.mgb_50{
+  margin-bottom: 50px !important;
+}
+.pdl_5{
+  padding-left: 5px;
+}
+.pdr_0{
+  padding-right: 0;
+}
+.imp-zone{
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  flex: 1;
+  padding: 0;
+  width: 100%;
+  height: 50px;
+  line-height: 50px;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+  -webkit-appearance: none;
+  overflow: hidden;
+}
+.add-cart{
+   background-color: #f85;
+   text-align: center;
+}
+.buy-now{
+   background-color: #f44;
+   text-align: center;
+}
+.btn-ct{
+  bottom:0;
+  left:0;
+  width: 100%;
+}
+
+.link-btn{
+  width: 45px; /*保持正方形*/
+  display: flex;
+  color: #666;
+  height:50px;
+  text-align: center;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+.empty-icon{
+  width: 128px;
+  height: 128px;
+}
+.tool-nav{
+  width: 25%;
+  position:relative;
+  float:left;
+  box-sizing:border-box;
+}
+.grid-container{
+  padding:10px 0;
+  display: flex;
+}
+.grid__icon {
+  display:block;
+  width:56rpx;
+  height:56rpx;
+  margin:0 auto;
+}
+.grid__label {
+  margin-top:10rpx;
+  display:block;
+  text-align:center;
+  color:#000000;
+  font-size:28rpx;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  overflow:hidden;
+}
+.zhanwei-image{
+  height:28px;
+  width:28px;
+  margin-left:auto;
+  margin-right:auto;
+}

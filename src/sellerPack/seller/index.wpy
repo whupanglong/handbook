@@ -1,0 +1,146 @@
+<!-- 商家首页 -->
+<template>
+  <view class="container">
+    <view class="zan-panel mgt_0">
+      <navigator url="./edit" class="zan-cell zan-cell--access">
+        <view class="zan-cell__bd">我的店铺</view>
+        <view class="zan-cell__ft">{{userInfo['shop_name']}}</view>
+      </navigator>
+    </view>
+
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-cell__bd">商品</view>
+      </view>
+      <view class="grid-container">
+        <repeat for="{{productTool}}">
+          <navigator class="tool-nav" url="{{item.href}}">
+            <image class="grid__icon" src="../../images/{{item.icon}}.png" />
+            <view class="grid__label zan-c-black">{{item.text}}</view>
+          </navigator>
+        </repeat>
+      </view>
+    </view>
+
+    <view class="zan-panel">
+      <navigator url="./order" class="zan-cell zan-cell--access">
+        <view class="zan-cell__bd">客户订单</view>
+        <view class="zan-cell__ft">全部</view>
+      </navigator>
+      <view class="grid-container">
+        <repeat for="{{orderType}}">
+          <navigator class="tool-nav" url="{{item.href}}">
+            <image class="grid__icon" src="../../images/{{item.icon}}.png" />
+            <view class="grid__label zan-c-black">{{item.text}}</view>
+          </navigator>
+        </repeat>
+      </view>
+    </view>
+
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-cell__bd">营销活动</view>
+      </view>
+      <view class="grid-container">
+        <repeat for="{{marketing}}">
+          <navigator class="tool-nav" url="{{item.href}}">
+            <image class="grid__icon" src="../../images/{{item.icon}}.png" />
+            <view class="grid__label zan-c-black">{{item.text}}</view>
+          </navigator>
+        </repeat>
+      </view>
+      <view class="grid-container">
+        <!-- todo，这里样式要统一 -->
+        <repeat for="{{marketing1}}">
+          <navigator class="tool-nav" url="{{item.href}}">
+            <image class="grid__icon" src="../../images/{{item.icon}}.png" />
+            <view class="grid__label zan-c-black">{{item.text}}</view>
+          </navigator>
+        </repeat>
+      </view>
+    </view>
+
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-cell__bd">客户维护</view>
+      </view>
+      <view class="grid-container">
+        <repeat for="{{customer}}">
+          <navigator class="tool-nav" url="{{item.href}}">
+            <image class="grid__icon" src="../../images/{{item.icon}}.png" />
+            <view class="grid__label zan-c-black">{{item.text}}</view>
+          </navigator>
+        </repeat>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import CONSTANT from '../../mixins/constant'
+  import mixin from '../../mixins/mixin'
+  import API from '../../apis/api'
+
+  export default class Buiness extends wepy.page {
+    mixins = [mixin]
+    components = {
+    }
+    config = {
+      navigationBarTitleText: '我是商家',
+      navigationBarBackgroundColor: '#494a4b',
+      navigationBarTextStyle: 'white'
+    }
+    computed = {
+    }
+    data = {
+      showOpenDataZone: false, // 当前微信版本是否支持open-data，需要1.9.90
+      IMAGE_ROUTE: CONSTANT.IMAGE_ROUTE,
+      userInfo: {},
+      sess: '',
+      isMember: false,
+      productTool: [
+        {'icon': 'bus_add', 'text': '添加', 'href': '../spu/add'},
+        {'icon': 'bus_edit', 'text': '编辑', 'href': '../spu/list'}
+        // {'icon': 'bus_price', 'text': '调价/库存', 'href': ''},
+        // {'icon': 'bus_jia', 'text': '上下架', 'href': ''}
+      ],
+      orderType: [
+        {'icon': 'order_unpaid', 'text': '待付款', 'href': './order?curr=0'},
+        {'icon': 'order_paid', 'text': '待发货', 'href': './order?curr=1'},
+        {'icon': 'order_delivering', 'text': '待签收', 'href': './order?curr=2'},
+        {'icon': 'order_done', 'text': '已完成', 'href': './order?curr=3'}
+      ],
+      marketing: [
+        {'icon': 'mkt_coupon', 'text': '优惠券', 'href': ''},
+        {'icon': 'mkt_discount', 'text': '限时折扣', 'href': ''},
+        {'icon': 'mkt_miaosha', 'text': '秒杀', 'href': ''},
+        {'icon': 'mkt_rebate', 'text': '满减', 'href': ''}
+      ],
+      marketing1: [
+        {'icon': 'mkt_tuan', 'text': '拼团', 'href': ''},
+        {'icon': 'mkt_gift', 'text': '赠品', 'href': ''}
+      ],
+      customer: [
+        {'icon': 'ctm_user', 'text': '老客户', 'href': ''},
+        {'icon': 'ctm_card', 'text': '会员卡', 'href': ''},
+        {'icon': 'ctm_points', 'text': '积分兑换', 'href': ''},
+        {'icon': 'ctm_track', 'text': '足迹', 'href': ''}
+      ]
+    }
+
+    async onShow (options) {
+      this.sess = await this.$login()
+      this.showOpenDataZone = this.$isVerAbove('1.9.90') // open-data的头像需要这个
+
+      let userInfo = await API.getUser({'query': {'sess': this.sess}})
+      this.userInfo = userInfo['data']
+      if (userInfo['data']['membership_expire'] && new Date(userInfo['data']['membership_expire']) > Date.now()) {
+        this.isMember = true
+      }
+      this.$apply()
+    }
+  }
+</script>
+<style lang="less">
+</style>

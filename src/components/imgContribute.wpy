@@ -1,0 +1,125 @@
+<!-- 顶部tab筛选 -->
+<template>
+  <view class="tag-picker popup-example--bottom zan-popup zan-popup--bottom {{ showPop ? 'zan-popup--show' : ''}}">
+    <view class="zan-popup__mask" @tap="togglePopSku"></view>
+    <view class="zan-popup__container" style="width: 100%;max-height:80%;">
+      <view class="zan-panel mgt_0">
+        <view class="zan-row">
+          <view class="zan-cell">
+            <view class="zan-cell__bd">上传您的{{info.title}}</view>
+          </view>
+          <view wx:if="{{contriImg}}" class="zan-col zan-col-8 zan-center" @tap="delImg">
+            <image mode="aspectFill" src="{{contriImg}}" style="width:{{imageHeight}}px;height:{{imageHeight}}px;"/>
+          </view>
+          <view wx:else @tap="addImg" class="zan-col zan-col-8 zan-center adder" style="width:{{imageHeight-20}}px;height:{{imageHeight-20}}px;">
+            <image mode="aspectFill" class="zhanwei-image" src="../images/plus.png"/>
+          </view>
+        </view>
+
+        <view class="add-sku-btns zan-row">
+          <view class="zan-btn zan-col zan-col-12" @tap="toggle" style="margin-bottom:0;">取消</view>
+          <view class="zan-btn zan-btn--primary zan-col zan-col-12 {{contriImg ? '':'zan-btn--disabled'}}" @tap="uploadImg" disabled="{{!contriImg}}">确定</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  import mixin from '../mixins/mixin.js'
+  import qiniuUploader from '../utils/qiniuUploader'
+  import API from '../apis/api'
+
+  export default class ImgContribute extends wepy.component {
+    mixins = [mixin]
+
+    props = {
+      info: Object
+    }
+    data = {
+      'contriImg': '',
+      'showPop': false,
+      'sysInfo': {},
+      'sess': ''
+    }
+
+    computed = {
+      imageHeight () {
+        return this.sysInfo.windowWidth * 0.32
+      }
+    }
+
+    methods = {
+      toggle () {
+        this.contriImg = ''
+        this.showPop = !this.showPop
+        this.$apply()
+      },
+      async addImg () {
+        this.sess = await this.$login()
+        let images = await wepy.chooseImage({
+          count: 1, //
+          sizeType: ['compressed'] // 压缩图
+        })
+        if (images) {
+          this.contriImg = images.tempFilePaths[0]
+          this.$apply()
+        }
+      },
+      delImg () {
+        this.contriImg = ''
+        this.$apply()
+      },
+      async uploadImg () {
+        if (!this.contriImg) return
+        this.showPop = false
+        this.$apply()
+        this.sess = await this.$login()
+
+        wepy.showLoading({'title': '正在上传'})
+
+        // 传图到七牛
+        let fileName = 'contri_' + this.contriImg.split('//').pop()
+        let that = this
+        qiniuUploader.upload(this.contriImg,
+          async function(res) { // 成功传图到七牛，那把图片链接保存到本地
+            console.log(res.key)
+            let doContri = await API.contributeImg({'query': {'sess': that.sess, 'img': res.key, 'hbid': that.info.hashid}})
+            wepy.hideLoading()
+
+            if (doContri.data.code == 0) {
+
+              that.$toast('成功，等待审核')
+            }
+
+          },
+          (error) => {
+            that.$toast('传图失败，请稍后重试', false)
+            wepy.hideLoading()
+            console.log('error1: ', error)
+          },
+          {'key': fileName}
+        )
+      }
+    }
+    onLoad () {
+      this.sysInfo = wepy.getSystemInfoSync()
+    }
+  }
+</script>
+<style lang="less">
+
+.adder{
+  border-style:dashed;
+  border-color:#e5e5e5;
+  position: relative;
+  background-color: #fff;
+  margin: 10px;
+  border-radius: 20rpx;
+  overflow:hidden;
+  display:flex;
+  display:-webkit-flex;
+  align-items:center;
+}
+
+</style>

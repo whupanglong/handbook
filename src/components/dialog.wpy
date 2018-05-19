@@ -1,0 +1,103 @@
+<!-- 提示 -->
+<template>
+  <view class="zan-dialog {{dialogShow ? 'zan-dialog--show' : ''}}">
+    <view class="zan-dialog--mask" style="z-index:20;"></view>
+    <view class="zan-dialog--container" style="z-index:21;">
+      <view wx:if="{{dialog['title']}}" class="zan-dialog__header">{{dialog['title']}}</view>
+      <swiper wx:if="{{dialog['image']}}" class="" style="width:{{imageSize}}px;height:{{imageSize}}px;">
+        <repeat for="{{dialog['image']}}">
+          <swiper-item>
+            <image @tap="{{imageTap}}" class="image" mode="aspectFill" style="width:{{imageSize}}px;height:{{imageSize}}px;" src="{{IMAGE_ROUTE}}{{dialog['image']}}?imageslim"/>
+          </swiper-item>
+        </repeat>
+      </swiper>
+      <view wx:if="{{dialog['body'].length}}" class="zan-dialog__content zan-dialog__content--title">
+        <repeat for="{{dialog['body']}}"><text selectable class="line">{{item}}</text></repeat>
+      </view>
+      <view wx:if="{{dialog['digitInput']}}" class="zan-cell">
+        <!-- <view class="zan-cell__bd">{{dialog['digitInput']}}</view> -->
+        <input @input="change" data-key="digit" confirm-type="next" class="zan-cell__bd zan-right" type="digit" value="{{digit}}" placeholder="{{dialog['digitInput']}}" placeholder-class="zan-field__placeholder"/>
+      </view>
+
+      <view class="zan-dialog__footer zan-dialog__footer--horizon">
+        <button wx:if="{{dialog['btnShut']}}" @tap="shutBtnTap" class="zan-dialog__button zan-btn" style="color: #333">{{dialog['btnShut'] || '知道了'}}</button>
+        <button wx:if="{{dialog['btnWarn']}}" @tap="warnBtnTap" class="zan-dialog__button zan-btn" style="color: red">{{dialog['btnWarn']}}</button>
+        <button wx:if="{{dialog['btnEtc']}}" @tap="etcBtnTap" class="zan-dialog__button zan-btn" style="color: #333">{{dialog['btnEtc']}}</button>
+        <button wx:if="{{dialog['btnMain']}}" @tap="mainBtnTap" class="zan-dialog__button zan-btn" style="color: #3CC51F">{{dialog['btnMain']}}</button>
+        <button wx:if="{{dialog['btnShare']}}" open-type="share" id="shareFromDialog" class="zan-dialog__button zan-btn" style="color: #3CC51F">分享</button>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  import CONSTANT from '../mixins/constant'
+  export default class Dialog extends wepy.component {
+    props = {
+      dialog: Object
+    }
+    data = {
+      dialogShow: false,
+      digit: 0,
+      sysInfo: {},
+      IMAGE_ROUTE: CONSTANT.IMAGE_ROUTE
+    }
+    _retPack () {
+      return {
+        'id': this.dialog.id, // 本次操作的id，传入值
+        'attach': this.dialog.attach, // 传参
+        'digit': this.digit
+      }
+    }
+    computed = {
+      imageSize () { // 保持正方形, dialog的宽度是屏幕80%
+        return this.sysInfo.windowWidth * 0.8
+      }
+    }
+    methods = {
+      toggleDialog (dialog) { // 显示和关闭dialog
+        if (dialog) { this.dialog = dialog }
+        this.dialogShow = !this.dialogShow
+        this.digit = ''
+        this.$apply()
+      },
+      change (e) {
+        let key = e.currentTarget.dataset.key
+        this[key] = e.detail.value
+        this.$apply()
+      },
+      warnBtnTap () {
+        this.$emit('warnBtnTap', this._retPack())
+      },
+      mainBtnTap () {
+        this.$emit('mainBtnTap', this._retPack())
+      },
+      etcBtnTap () {
+        this.$emit('etcBtnTap', this._retPack())
+      },
+      imageTap () {
+        this.$emit('imageTap', this._retPack())
+      },
+      shutBtnTap () { // 自带关闭按钮
+        this.dialogShow = false
+        this.$apply()
+      }
+    }
+    onLoad () {
+      this.sysInfo = wepy.getSystemInfoSync()
+    }
+  }
+</script>
+<style lang="less">
+.line{
+  margin-top:2px;
+  display: block;
+}
+.image{
+  width: 100%;
+}
+.zan-dialog__content {
+  padding:5px 20px;
+}
+
+</style>

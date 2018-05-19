@@ -1,0 +1,353 @@
+<!-- 科尔编号首页 -->
+<template>
+  <view class="container">
+    <!-- 顶部筛选分类 -->
+    <view class="zan-tab fixed" style="z-index:5;">
+      <view class="zan-tab__bd">
+        <repeat for="{{tabs}}">
+          <view @tap="switchTab" data-index="{{index}}" class="zan-tab__item {{currType === index ? 'tab--selected':''}}">
+            <view class="zan-tab__title">{{item}}</view>
+          </view>
+        </repeat>
+      </view>
+    </view>
+
+    <!-- feeds -->
+    <view class="zan-row" style="margin-top:45px;padding-bottom:10px;">
+      <repeat for="{{list}}" key="index" index="index" item="item">
+        <view @tap="viewBigImg" data-index="{{index}}" class="zan-col zan-col-12 {{index%2==0 ? 'odd':'even'}}">
+          <view class="feed-shell">
+            <swiper style="height:{{imageHeight}}px;">
+              <repeat for="{{item.img}}" item="imgItem">
+                <swiper-item>
+                  <image mode="aspectFill" class="feed-image" src="{{IMAGE_ROUTE}}{{imgItem}}?imageslim" style="height:{{imageHeight}}px;" lazy-load="true"/>
+                </swiper-item>
+              </repeat>
+            </swiper>
+            <view class="">
+              <view class="zan-ellipsis zan-font-14" style="padding-left:3px;">{{item.title}}</view>
+              <view class="zan-ellipsis zan-font-12" style="padding-left:3px;">{{item.loc}}{{item.desc}}</view>
+            </view>
+          </view>
+        </view>
+      </repeat>
+      <view wx:if="{{!list.length}}" class="zan-loadmore zan-loadmore--nodata" style="margin-top:140px;">
+        <view class="zan-loadmore__tips">没有记录</view>
+      </view>
+    </view>
+
+    <!-- 箭头筛选按钮 -->
+    <view class="enter zan-font-20" @tap="toggleLeftPopup"><image class="arrow" src="../../images/arrow.png"/></view>
+    <!-- 筛选弹出 -->
+    <view class="popup-example--left zan-popup zan-popup--left {{ showLeftPopup ? 'zan-popup--show' : ''}}">
+      <view class="zan-popup__mask" @tap="toggleLeftPopup"></view>
+      <view class="zan-popup__container">
+        <scroll-view class="zan-row" scroll-y style="height:100%" scroll-top="0" scroll-left="0">
+          <view class="zan-panel">
+            <repeat for="{{categoryFilter}}">
+              <view @tap="changeCate" data-key="{{item.key}}" data-title="{{item.name}}" class="zan-cell {{initSap===item.key ? 'sap-selected':'sap-no-select'}}">
+                <view class="zan-cell__bd">{{item.name}}</view>
+              </view>
+            </repeat>
+          </view>
+        </scroll-view>
+      </view>
+      <view wx:if="{{!activeSearch}}" class="searcher">
+        <view class="oper-icon-ctn share2fri">
+          <view class="op-desc">转发给好友</view>
+          <button open-type="share" @tap="toggleLeftPopup" id="shareFromSearcher" class="middle-text-o" style="padding:unset;">
+            <image class="middle-text-i op-icon" src="../../images/fenxiang.png"/>
+          </button>
+        </view>
+        <view class="oper-icon-ctn search-entr">
+          <view class="op-desc">搜索</view>
+          <button @tap="showSearch" class="middle-text-o" style="padding:unset;">
+            <image class="middle-text-i op-icon" src="../../images/search.png"/>
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <Dialog @warnBtnTap.user="contribute"></Dialog>
+    <Searcher @reptileRet.user="reptileRet" @showSearch.user="showSearch"></Searcher>
+    <!-- 贡献我的图片 -->
+    <ImgContribute :info.sync="popupLithop"></ImgContribute>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import Dialog from '../../components/dialog'
+  import Searcher from '../../components/searcher'
+  import ImgContribute from '../../components/imgContribute'
+
+  import mixin from '../../mixins/mixin'
+  import CONSTANT from '../../mixins/constant'
+  import API from '../../apis/api'
+
+
+  export default class Lithops extends wepy.page {
+    mixins = [mixin]
+    components = {
+      Dialog,
+      Searcher,
+      ImgContribute
+    }
+    config = {
+      navigationBarTitleText: '生石花图鉴'
+    }
+    data = {
+      initSap: 'lesliei',
+      rawList: [],
+      list: [],
+      tabs: ['科尔编号', '园艺种', '名家'],
+      showLeftPopup: false,
+      categoryFilter: [],
+      currType: 0,
+      sysInfo: {},
+      popupLithop: {},
+      IMAGE_ROUTE: CONSTANT.IMAGE_ROUTE
+      // scTop: 0
+    }
+    computed = {
+      imageHeight () { // 保持正方形
+        return this.sysInfo.windowWidth * 0.455
+      }
+    }
+    watch = {
+      rawList (newValue) {
+        for (let r in newValue) {
+          let item = newValue[r]
+          // console.log(item.img)
+          item.img = JSON.parse(item.img || '[]')
+          // item.img = cc[0]
+          // console.log(typeof cc, cc)
+        }
+        if (newValue.length && newValue[0]) { // 更新页面title
+          for (let c in this.categoryFilter) {
+            if (this.categoryFilter[c].key == newValue[0].category) {
+              wepy.setNavigationBarTitle({'title': this.categoryFilter[c].name})
+              this.initSap = this.categoryFilter[c].key
+              this.currType = newValue[0].type
+              break;
+            }
+          }
+        }
+        this.list = newValue
+        this.$apply()
+      }
+    }
+    onShareAppMessage (res) {
+      console.log(res.target);
+      if (res.from === 'button' && res.target.id === 'shareFromDialog') {
+        // 来自页面内转发按钮
+        console.log(this.popupLithop)
+        return {
+          title: '[生石花]' + this.popupLithop['title'],
+          imageUrl: CONSTANT.IMAGE_ROUTE + this.popupLithop['img'],
+          path: '/pages/home/lithops?hashid=' + this.popupLithop['hashid']
+        }
+      } else { // 右上角的转发 or 左侧popup的转发
+        return {
+          title: '【生石花匠】最全420种科尔编号及300多种园艺品种',
+          path: '/pages/home/lithops'
+        }
+      }
+
+    }
+    _popupItem = (obj) => {
+      if (obj.hashid) {
+        for (let z in this.list) {
+          if (this.list[z].hashid == obj.hashid) {
+            obj.data = this.list[z]
+          }
+        }
+      }
+      let data = obj.data
+      this.popupLithop = data // 缓存下来当前查看的，为可能的转发准备
+      this.$apply()
+      console.log(data)
+      let body = []
+      if (data.title) {body.push(data.title)}
+      let sp = data.homo + ' ' + data.sapiens + (data.ssp ? ' ssp ' + data.ssp : '') + (data.var ? ' var ' + data.var : '')
+      body.push(sp)
+      if (data.loc) {body.push(data.loc)}
+      if (data.desc) {body.push(data.desc)}
+      if (data.copyright) {body.push('©'+data.copyright)}
+
+      console.log(this.IMAGE_ROUTE + data.img)
+      this.$invoke('Dialog', 'toggleDialog', {
+        'image': data.img,
+        'body': body,
+        'btnShut': '关闭',
+        'btnWarn': '我要贡献',
+        'btnShare': '分享'
+      })
+    }
+    methods = {
+      toggleLeftPopup () {
+        this.showLeftPopup = !this.showLeftPopup
+        this.$apply()
+      },
+      async switchTab (e) { // 切换顶部tab
+        // let tabid = e.currentTarget.dataset.tab
+        // this.currTab = tabid
+        this.currType = e.currentTarget.dataset.index // 当前什么分类，0是科尔编号，1是选育，2是名家
+        this.categoryFilter = this.$getCategory(this.currType > 1 ? 'gardener':'species') // 名家和其他的目录不一样
+        let getData = await API.getHandBook({'query': {'homo': 'lithops', 'category': this.categoryFilter[0]['key'], 'type': this.currType}})
+        this.rawList = getData['data']
+        this.$apply()
+      },
+      async changeCate (e) { // 切换分类
+        let dataset = e.currentTarget.dataset
+        let {key, title} = dataset
+        this.initSap = key
+        let getData = await API.getHandBook({'query': {'homo': 'lithops', 'category': key, 'type': this.currType}})
+        this.rawList = getData['data']
+        this.showLeftPopup = !this.showLeftPopup
+        // wepy.setNavigationBarTitle({'title': title})
+        this.$apply()
+      },
+      viewBigImg (e) {
+        let idx = e.currentTarget.dataset.index
+        let data = this.list[idx]
+        this._popupItem({'data': data})
+      },
+      showSearch () {
+        this.showLeftPopup = false
+        this.$invoke('Searcher', 'showSearch')
+        this.$apply()
+      },
+      contribute () { // 打开贡献图片的弹窗
+        this.$invoke('Dialog', 'shutBtnTap')
+        this.$invoke('ImgContribute', 'toggle')
+      }
+    }
+
+    async onLoad (options) {
+      this.sysInfo = wepy.getSystemInfoSync()
+      this.categoryFilter = this.$getCategory('species')
+      let hashid = options.hashid || '' // 如果是分享进来的，这里直接查看指定情况
+      let queryOpt = {}
+      if (hashid) {
+        queryOpt = {'homo': 'Lithops', 'hashid': hashid}
+      } else {
+        queryOpt = {'homo': 'Lithops', 'category': this.initSap, 'type': 0}
+      }
+      let data = await API.getHandBook({'query': queryOpt})
+      this.rawList = data['data']
+      this.$apply()
+      if (hashid) {
+        this._popupItem({'hashid': hashid})
+      }
+    }
+  }
+</script>
+<style lang="less">
+.enter{
+  position:fixed;
+  bottom:66px;
+  height:40px;
+  background-color:#fb8b24;
+  padding:0 3px;
+  display:flex;
+  align-items:center;
+  color:white;
+  border-radius:0 12px 12px 0;
+}
+.zan-popup--left .zan-popup__container {
+  top:0;
+  height:100%;
+  width:25%;
+  text-align:center;
+
+}
+.sap-selected .zan-cell__bd{
+  color:#333 !important;
+  border-left:3px solid #fb8b24;
+  font-weight:800;
+}
+.sap-no-select{
+  border-left:3px solid #fff;
+}
+.arrow{
+  width: 30px;
+  height: 30px;
+}
+.zan-popup__mask{
+  background:rgba(0,0,0,0.6);
+}
+.feed-shell{
+  position:relative;
+  background-color:#fff;
+  margin-top:10px;
+  box-shadow: 0 0.5px 1px rgba(0,0,0,0.3);
+}
+.feed-image{
+  width: 100%;
+}
+.feed-desc{
+  text-align:center;
+  position:absolute;
+  bottom:0;
+  width:100%;
+  background-color:rgba(0,0,0,0.6);
+  color:white;
+}
+.p-code{
+  padding: 0 4px;
+}
+
+
+.searcher{
+  position:fixed;
+  z-index:11;
+  bottom:100px;
+  right:0;
+  width:75%;
+}
+.searcher-btn{
+  width:50%;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  color:white;
+}
+
+.oper-icon-ctn{
+  position: fixed;
+  z-index: 11;
+  display:flex;
+  align-items:center;
+  right:30px !important;
+}
+.op-desc{
+  margin-right: 15px;
+  font-size:14px;
+  color:white;
+}
+.middle-text-o{
+  display:flex;
+  display:-webkit-flex;
+  align-items:center;
+  z-index:11;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background: #fff;
+}
+.middle-text-i{
+  margin-left:auto;
+  margin-right:auto;
+}
+.op-icon{
+  height:28px;
+  width:28px;
+}
+.search-entr{
+  bottom: 50px;
+}
+.share2fri{
+  bottom: 120px;
+}
+
+</style>
